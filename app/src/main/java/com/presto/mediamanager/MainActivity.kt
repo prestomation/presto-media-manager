@@ -21,9 +21,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestNotifications.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-        }
+        maybeRequestNotificationPermission()
         setContent {
             PrestoTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -36,5 +34,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         WorkScheduler.scanNow(this)
+    }
+
+    /** Only prompt when the permission isn't already granted, so an already-granted
+     *  install (and instrumentation tests) never see a foreground dialog. */
+    private fun maybeRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (!granted) requestNotifications.launch(android.Manifest.permission.POST_NOTIFICATIONS)
     }
 }
