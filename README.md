@@ -102,17 +102,8 @@ startup. Real video playback/export is validated manually on-device.
 - **Emulator E2E** (`.github/workflows/emulator-e2e.yml`) — runs instrumented tests on
   a KVM-accelerated emulator. Blocking.
 
-## Optional: auto-install the SDK in Claude Code sessions
+## Auto-install the SDK in Claude Code sessions
 
-To have the Android SDK installed automatically when a Claude Code (local or web)
-session starts, add a `SessionStart` hook to `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      { "hooks": [ { "type": "command", "command": "bash scripts/setup.sh" } ] }
-    ]
-  }
-}
-```
+[`.claude/settings.json`](.claude/settings.json) registers a `SessionStart` hook that
+runs `scripts/setup.sh`, so the Android SDK is installed automatically whenever a
+Claude Code (local or web) session starts and the project can build/test immediately.
