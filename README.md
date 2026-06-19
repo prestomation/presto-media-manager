@@ -1,6 +1,7 @@
-# Presto Media Manager
+# Ray Banned
 
-A personal, sideloaded Android app for rapidly triaging the pile of videos a pair
+A personal, sideloaded Android app (repo: `presto-media-manager`) for rapidly
+triaging the pile of videos a pair
 of Meta glasses (or any capture device) dumps into a folder every day. Review a
 looping feed, one-tap **Delete / Later / Archive / Review**, trim + frame-crop in
 an editor, and export with optional audio removal and downscale-for-sharing.
