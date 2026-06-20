@@ -21,9 +21,9 @@ import org.robolectric.annotation.GraphicsMode
 
 /**
  * Accessibility checks (Android Accessibility Test Framework via Roborazzi) on
- * key screens — touch-target size, contrast, and label presence. Reported at
- * LogOnly for now (the feed action buttons and the day stepper have pre-existing
- * touch-target/contrast findings); raise to Error once those are fixed.
+ * key screens — touch-target size, contrast, and label presence. Enforced at
+ * Warning level (fails CI on WARNING or ERROR findings) now that the duplicate
+ * speakable-text issues on the feed actions and settings rows are fixed.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -35,7 +35,7 @@ class AccessibilityTests {
 
     private val options = RoborazziATFAccessibilityCheckOptions(
         checker = RoborazziATFAccessibilityChecker(preset = AccessibilityCheckPreset.LATEST),
-        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.LogOnly,
+        failureLevel = RoborazziATFAccessibilityChecker.CheckLevel.Warning,
     )
 
     @Test
