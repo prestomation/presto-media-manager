@@ -7,23 +7,32 @@ import com.presto.mediamanager.PrestoApp
 import com.presto.mediamanager.data.db.MediaItem
 import com.presto.mediamanager.work.BadgeManager
 import com.presto.mediamanager.work.WorkScheduler
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-data class ReviewFeedUiState(
-    val items: List<MediaItem> = emptyList(),
-    val loading: Boolean = true,
-)
 
 class ReviewFeedViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as PrestoApp).container
     private val repo = container.mediaRepository
 
-    val queue: StateFlow<List<MediaItem>> = repo.observeReviewQueue()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    /** URIs whose deletion is deferred (hidden from the feed, file not yet removed). */
+    private val pendingDeletes = MutableStateFlow<Set<String>>(emptySet())
+
+    /** Emits the item just soft-deleted so the UI can offer Undo. */
+    private val _undoEvents = MutableSharedFlow<MediaItem>(extraBufferCapacity = 1)
+    val undoEvents = _undoEvents.asSharedFlow()
+
+    val queue: StateFlow<List<MediaItem>> =
+        combine(repo.observeReviewQueue(), pendingDeletes) { items, hidden ->
+            items.filterNot { it.uri in hidden }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val configured: StateFlow<Boolean> = container.settingsRepository.settings
         .map { it.isConfigured }
@@ -37,7 +46,26 @@ class ReviewFeedViewModel(app: Application) : AndroidViewModel(app) {
         WorkScheduler.scanNow(getApplication())
     }
 
-    fun delete(item: MediaItem) = run { repo.delete(item) }
+    /**
+     * Soft-delete: hide the item immediately and emit an Undo event. The real
+     * file deletion is deferred to [commitDelete], called when the Undo snackbar
+     * is dismissed. If the process dies first, nothing is lost — the row stays
+     * PENDING and the video reappears on the next scan.
+     */
+    fun delete(item: MediaItem) {
+        pendingDeletes.update { it + item.uri }
+        _undoEvents.tryEmit(item)
+    }
+
+    fun undoDelete(item: MediaItem) {
+        pendingDeletes.update { it - item.uri }
+    }
+
+    fun commitDelete(item: MediaItem) = run {
+        repo.delete(item)
+        pendingDeletes.update { it - item.uri }
+    }
+
     fun later(item: MediaItem) = run { repo.markLater(item) }
     fun archive(item: MediaItem, label: String) = run { repo.quickArchive(item, label) }
 
