@@ -23,6 +23,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,9 +61,27 @@ fun ReviewFeedScreen(
 ) {
     val items by viewModel.queue.collectAsState()
     val configured by viewModel.configured.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        viewModel.undoEvents.collect { item ->
+            val result = snackbarHostState.showSnackbar(
+                message = "Video deleted",
+                actionLabel = "Undo",
+                duration = SnackbarDuration.Long,
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.undoDelete(item)
+            } else {
+                viewModel.commitDelete(item)
+            }
+        }
+    }
+
     ReviewFeedContent(
         items = items,
         configured = configured,
+        snackbarHostState = snackbarHostState,
         onOpenSettings = onOpenSettings,
         onDelete = viewModel::delete,
         onLater = viewModel::later,
@@ -82,6 +104,7 @@ fun ReviewFeedContent(
     onReview: (MediaItem) -> Unit,
     videoSlot: @Composable (MediaItem, Boolean) -> Unit,
     configured: Boolean = true,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     modifier: Modifier = Modifier,
 ) {
     if (items.isEmpty()) {
@@ -93,13 +116,19 @@ fun ReviewFeedContent(
     val scope = rememberCoroutineScope()
     var labelTarget by remember { mutableStateOf<MediaItem?>(null) }
 
+    // Later keeps the item in the queue, so step forward to the next one.
+    // Delete/Archive remove the item, so the next one slides into place on its own.
     fun advance() {
         val next = (pagerState.currentPage + 1).coerceAtMost(items.lastIndex)
         scope.launch { pagerState.animateScrollToPage(next) }
     }
 
     Box(modifier.fillMaxSize().background(Color.Black)) {
-        VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+        VerticalPager(
+            state = pagerState,
+            key = { items[it].uri },
+            modifier = Modifier.fillMaxSize(),
+        ) { page ->
             val item = items[page]
             Box(Modifier.fillMaxSize()) {
                 videoSlot(item, page == pagerState.currentPage)
@@ -114,13 +143,18 @@ fun ReviewFeedContent(
 
                 FeedActionBar(
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    onDelete = { onDelete(item); advance() },
+                    onDelete = { onDelete(item) },
                     onLater = { onLater(item); advance() },
                     onArchive = { labelTarget = item },
                     onReview = { onReview(item) },
                 )
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+        )
     }
 
     labelTarget?.let { target ->
@@ -130,7 +164,6 @@ fun ReviewFeedContent(
             onConfirm = { label ->
                 onArchive(target, label)
                 labelTarget = null
-                advance()
             },
             onDismiss = { labelTarget = null },
         )

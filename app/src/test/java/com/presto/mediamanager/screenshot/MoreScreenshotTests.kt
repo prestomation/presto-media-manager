@@ -1,7 +1,11 @@
 package com.presto.mediamanager.screenshot
 
 import android.graphics.Bitmap
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
@@ -70,6 +74,26 @@ class MoreScreenshotTests {
                         videoSlot = { _, _ -> PlaceholderVideo() },
                     )
                 }
+            }
+        }
+        composeRule.onRoot().captureRoboImage()
+    }
+
+    @Test
+    fun feed_undoSnackbar() {
+        composeRule.setContent {
+            val host = remember { SnackbarHostState() }
+            LaunchedEffect(Unit) {
+                host.showSnackbar("Video deleted", actionLabel = "Undo", duration = SnackbarDuration.Indefinite)
+            }
+            PrestoTheme {
+                ReviewFeedContent(
+                    items = sampleItems(2),
+                    snackbarHostState = host,
+                    onOpenSettings = {}, onDelete = {}, onLater = {},
+                    onArchive = { _, _ -> }, onReview = {},
+                    videoSlot = { _, _ -> PlaceholderVideo() },
+                )
             }
         }
         composeRule.onRoot().captureRoboImage()
