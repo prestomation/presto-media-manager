@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Build
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
@@ -13,7 +14,7 @@ import org.junit.runner.RunWith
 
 /**
  * Emulator smoke test: the app launches and, with no folders configured yet,
- * shows the empty review state. Real video playback/export is exercised
+ * shows the folder-setup prompt. Real video playback/export is exercised
  * manually on-device; this guards against gross startup regressions.
  *
  * POST_NOTIFICATIONS is pre-granted (order = 0, before the activity launches) so
@@ -35,8 +36,11 @@ class AppLaunchTest {
     val composeRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun launches_andShowsEmptyReviewState() {
-        composeRule.waitForIdle()
-        composeRule.onNodeWithText("All caught up").assertIsDisplayed()
+    fun launches_andShowsSetupPrompt() {
+        // No folders configured on a fresh install -> the feed prompts for setup.
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithText("Set up your folders").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithText("Set up your folders").assertIsDisplayed()
     }
 }

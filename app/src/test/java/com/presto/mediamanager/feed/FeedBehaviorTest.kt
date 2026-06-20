@@ -36,7 +36,7 @@ class FeedBehaviorTest {
                     onLater = {},
                     onArchive = { _, _ -> },
                     onReview = {},
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }
@@ -56,7 +56,7 @@ class FeedBehaviorTest {
                     onLater = {},
                     onArchive = { _, _ -> },
                     onReview = {},
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }
@@ -65,20 +65,43 @@ class FeedBehaviorTest {
     }
 
     @Test
-    fun emptyQueue_showsAllCaughtUp() {
+    fun emptyQueue_whenConfigured_showsAllCaughtUp() {
         composeRule.setContent {
             PrestoTheme {
                 ReviewFeedContent(
                     items = emptyList(),
+                    configured = true,
                     onOpenSettings = {},
                     onDelete = {},
                     onLater = {},
                     onArchive = { _, _ -> },
                     onReview = {},
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }
         composeRule.onNodeWithText("All caught up").assertIsDisplayed()
+    }
+
+    @Test
+    fun emptyQueue_whenUnconfigured_promptsSetup() {
+        var opened = false
+        composeRule.setContent {
+            PrestoTheme {
+                ReviewFeedContent(
+                    items = emptyList(),
+                    configured = false,
+                    onOpenSettings = { opened = true },
+                    onDelete = {},
+                    onLater = {},
+                    onArchive = { _, _ -> },
+                    onReview = {},
+                    videoSlot = { _, _ -> PlaceholderVideo() },
+                )
+            }
+        }
+        composeRule.onNodeWithText("Set up your folders").assertIsDisplayed()
+        composeRule.onNodeWithText("Open settings").performClick()
+        assertThat(opened).isTrue()
     }
 }

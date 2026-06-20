@@ -47,7 +47,7 @@ class ScreenshotTests {
                     onLater = {},
                     onArchive = { _, _ -> },
                     onReview = {},
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }
@@ -65,7 +65,7 @@ class ScreenshotTests {
                     onLater = {},
                     onArchive = { _, _ -> },
                     onReview = {},
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }
@@ -90,7 +90,7 @@ class ScreenshotTests {
                     onRemoveAudioChange = {},
                     onShareResolutionChange = {},
                     onExport = { _, _ -> },
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }

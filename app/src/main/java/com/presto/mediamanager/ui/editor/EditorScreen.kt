@@ -37,7 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.presto.mediamanager.data.db.MediaItem
 import com.presto.mediamanager.media.CropRect
 import com.presto.mediamanager.media.TrimRange
-import com.presto.mediamanager.ui.components.LoopingVideoPlayer
+import com.presto.mediamanager.ui.components.EditorPreviewPlayer
 import java.util.Locale
 
 @Composable
@@ -60,7 +60,15 @@ fun EditorScreen(
         onRemoveAudioChange = viewModel::setRemoveAudio,
         onShareResolutionChange = viewModel::setShareResolution,
         onExport = viewModel::export,
-        videoSlot = { item -> LoopingVideoPlayer(uri = item.uri, modifier = Modifier.fillMaxSize()) },
+        videoSlot = { item, zoomEnabled ->
+            EditorPreviewPlayer(
+                uri = item.uri,
+                trimStartMs = state.trim.startMs,
+                trimEndMs = state.trim.endMs,
+                zoomEnabled = zoomEnabled,
+                modifier = Modifier.fillMaxSize(),
+            )
+        },
     )
 }
 
@@ -74,7 +82,7 @@ fun EditorContent(
     onRemoveAudioChange: (Boolean) -> Unit,
     onShareResolutionChange: (com.presto.mediamanager.data.settings.ShareResolution) -> Unit,
     onExport: (String, com.presto.mediamanager.media.ExportDestination) -> Unit,
-    videoSlot: @Composable (MediaItem) -> Unit,
+    videoSlot: @Composable (MediaItem, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showSheet by remember { mutableStateOf(false) }
@@ -138,7 +146,7 @@ fun EditorContent(
             if (item == null) {
                 CircularProgressIndicator()
             } else {
-                videoSlot(item)
+                videoSlot(item, zoomInspect)
                 if (!zoomInspect) {
                     CropOverlay(crop = state.crop, onCropChange = onCropChange)
                 }
