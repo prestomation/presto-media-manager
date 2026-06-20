@@ -35,16 +35,15 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Run instrumented tests on emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 34
-          arch: x86_64
-          target: google_apis
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: ./gradlew :app:connectedDebugAndroidTest
+      - name: Accept SDK licenses and pre-install emulator
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "emulator" "platform-tools" >/dev/null
+
+      # Gradle Managed Device (Automated Test Device, headless). AGP provisions the
+      # aosp-atd;x86_64 image for API 34 and runs connected tests against it.
+      - name: Run instrumented tests on managed device (ATD API 34)
+        run: ./gradlew :app:atdApi34DebugAndroidTest --no-daemon
 
       - name: Upload instrumentation report
         if: always()

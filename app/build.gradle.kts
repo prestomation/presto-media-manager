@@ -54,6 +54,16 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
+        managedDevices {
+            localDevices {
+                create("atdApi34") {
+                    device = "Pixel 5"
+                    apiLevel = 34
+                    // Automated Test Device: headless, no GUI, optimized for instrumentation.
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
     }
     lint {
         abortOnError = true
@@ -122,6 +132,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.truth)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }
 
 roborazzi {
