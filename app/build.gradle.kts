@@ -113,6 +113,7 @@ dependencies {
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.roborazzi.junit.rule)
+    testImplementation(libs.roborazzi.accessibility.check)
     testImplementation(libs.androidx.room.ktx)
 
     // ---- Instrumented E2E tests (emulator) ----

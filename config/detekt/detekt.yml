@@ -7,6 +7,13 @@ formatting:
     active: false
   Filename:
     active: false
+  # Contentious wrapping rules; line length is still enforced via style/MaxLineLength.
+  ArgumentListWrapping:
+    active: false
+  ParameterListWrapping:
+    active: false
+  Wrapping:
+    active: false
 
 naming:
   FunctionNaming:
