@@ -1,26 +1,28 @@
 package com.presto.mediamanager.data.repo
 
-import android.net.Uri
 import com.presto.mediamanager.data.db.MediaDao
 import com.presto.mediamanager.data.db.MediaItem
 import com.presto.mediamanager.data.model.MediaStatus
-import com.presto.mediamanager.data.saf.SafManager
-import com.presto.mediamanager.data.settings.SettingsRepository
-import com.presto.mediamanager.media.ExportManager
+import com.presto.mediamanager.data.settings.SettingsProvider
+import com.presto.mediamanager.data.storage.StorageGateway
 import com.presto.mediamanager.media.ExportOutcome
 import com.presto.mediamanager.media.ExportRequest
+import com.presto.mediamanager.media.VideoExporter
 import com.presto.mediamanager.util.Filenames
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Single source of truth for the review workflow: reconciles the input folder
  * with the Room mirror and performs the delete / later / archive / share actions.
+ *
+ * Depends only on small ports ([StorageGateway], [SettingsProvider],
+ * [VideoExporter]) plus the DAO, so its logic is exercised by JVM tests.
  */
 class MediaRepository(
     private val dao: MediaDao,
-    private val saf: SafManager,
-    private val settings: SettingsRepository,
-    private val exporter: ExportManager,
+    private val storage: StorageGateway,
+    private val settings: SettingsProvider,
+    private val exporter: VideoExporter,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     fun observeReviewQueue(): Flow<List<MediaItem>> = dao.observeReviewQueue()
@@ -32,7 +34,7 @@ class MediaRepository(
     /** Reconcile the input folder with the DB: add new videos, drop vanished ones. */
     suspend fun scanInputFolder(): Int {
         val inputUri = settings.current().inputFolderUri ?: return 0
-        val videos = saf.listVideos(Uri.parse(inputUri))
+        val videos = storage.listVideos(inputUri)
         val seenUris = videos.map { it.uri }.toSet()
 
         var added = 0
@@ -43,7 +45,7 @@ class MediaRepository(
                         uri = video.uri,
                         displayName = video.displayName,
                         sizeBytes = video.sizeBytes,
-                        durationMs = saf.probeDurationMs(Uri.parse(video.uri)),
+                        durationMs = storage.probeDurationMs(video.uri),
                         dateCapturedMs = video.lastModifiedMs,
                         dateFirstSeenMs = now(),
                         status = MediaStatus.PENDING,
@@ -61,7 +63,7 @@ class MediaRepository(
     }
 
     suspend fun delete(item: MediaItem) {
-        saf.delete(Uri.parse(item.uri))
+        storage.delete(item.uri)
         dao.deleteRow(item.uri)
     }
 
@@ -73,9 +75,9 @@ class MediaRepository(
     suspend fun quickArchive(item: MediaItem, label: String) {
         val archiveUri = settings.current().archiveFolderUri ?: return
         val fileName = Filenames.dated(label, item.dateCapturedMs)
-        val written = saf.copyInto(Uri.parse(item.uri), Uri.parse(archiveUri), fileName)
+        val written = storage.copyInto(item.uri, archiveUri, fileName)
         if (written != null) {
-            saf.delete(Uri.parse(item.uri))
+            storage.delete(item.uri)
             dao.deleteRow(item.uri)
         }
     }
@@ -83,16 +85,16 @@ class MediaRepository(
     /** Edited export from the cropping screen. Always archives; SHARE also downscales. */
     suspend fun exportEdited(item: MediaItem, request: ExportRequest): ExportOutcome {
         val s = settings.current()
-        val archiveTree = requireNotNull(s.archiveFolderUri) { "Archive folder not set" }
-        val shareTree = requireNotNull(s.shareFolderUri) { "Share folder not set" }
+        val archiveFolder = requireNotNull(s.archiveFolderUri) { "Archive folder not set" }
+        val shareFolder = requireNotNull(s.shareFolderUri) { "Share folder not set" }
         val outcome = exporter.export(
-            sourceUri = Uri.parse(item.uri),
+            sourceUri = item.uri,
             captureMs = item.dateCapturedMs,
-            archiveTreeUri = Uri.parse(archiveTree),
-            shareTreeUri = Uri.parse(shareTree),
+            archiveFolderUri = archiveFolder,
+            shareFolderUri = shareFolder,
             request = request,
         )
-        saf.delete(Uri.parse(item.uri))
+        storage.delete(item.uri)
         dao.deleteRow(item.uri)
         return outcome
     }
@@ -102,7 +104,7 @@ class MediaRepository(
         val cutoff = now() - days.toLong() * 24L * 60L * 60L * 1000L
         val stale = dao.staleItems(cutoff)
         for (item in stale) {
-            saf.delete(Uri.parse(item.uri))
+            storage.delete(item.uri)
             dao.deleteRow(item.uri)
         }
         return stale.size

@@ -1,0 +1,44 @@
+# Detekt config tuned for a Jetpack Compose codebase. Builds upon the default
+# config; rules below are adjusted where Compose idioms would otherwise be noisy.
+
+formatting:
+  # Composable functions are intentionally PascalCase.
+  FunctionName:
+    active: false
+  Filename:
+    active: false
+  # Contentious wrapping rules; line length is still enforced via style/MaxLineLength.
+  ArgumentListWrapping:
+    active: false
+  ParameterListWrapping:
+    active: false
+  Wrapping:
+    active: false
+
+naming:
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+
+style:
+  # UI code is full of dp/alpha/duration literals; magic-number noise isn't useful here.
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    maxLineLength: 120
+  UnusedPrivateMember:
+    active: true
+
+complexity:
+  # Compose builder functions are long by nature; stateless content takes many callbacks.
+  LongMethod:
+    active: false
+  LongParameterList:
+    active: false
+  CyclomaticComplexMethod:
+    active: false
+  TooManyFunctions:
+    active: false

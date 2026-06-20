@@ -37,6 +37,19 @@ jobs:
       - name: JVM unit + screenshot verification
         run: ./gradlew :app:verifyRoborazziDebug
 
+      - name: Static analysis (detekt + Android Lint)
+        run: ./gradlew :app:detekt :app:lintDebug
+
+      - name: Coverage report
+        run: ./gradlew :app:koverXmlReportDebug :app:koverLogDebug
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kover-coverage
+          path: app/build/reports/kover/**
+
       - name: Upload debug APK
         if: always()
         uses: actions/upload-artifact@v4

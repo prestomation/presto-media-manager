@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>ArgumentListWrapping:CropOverlay.kt$(left = (crop.left + dx / wPx).coerceIn(0f, crop.right - 0.1f), top = (crop.top + dy / hPx).coerceIn(0f, crop.bottom - 0.1f))</ID>
+    <ID>ArgumentListWrapping:CropOverlay.kt$(right = (crop.right + dx / wPx).coerceIn(crop.left + 0.1f, 1f), bottom = (crop.bottom + dy / hPx).coerceIn(crop.top + 0.1f, 1f))</ID>
+    <ID>ImportOrdering:CropOverlay.kt$import androidx.compose.foundation.background import androidx.compose.foundation.border import androidx.compose.foundation.gestures.detectDragGestures import androidx.compose.foundation.layout.BoxWithConstraints import androidx.compose.foundation.layout.fillMaxSize import androidx.compose.foundation.layout.offset import androidx.compose.foundation.layout.size import androidx.compose.foundation.shape.CircleShape import androidx.compose.material3.MaterialTheme import androidx.compose.runtime.Composable import androidx.compose.ui.Modifier import androidx.compose.ui.graphics.Color import androidx.compose.ui.input.pointer.pointerInput import androidx.compose.ui.platform.LocalDensity import androidx.compose.ui.unit.dp import com.presto.mediamanager.media.CropRect import androidx.compose.foundation.layout.Box</ID>
+    <ID>ImportOrdering:EditorViewModel.kt$import android.app.Application import androidx.lifecycle.AndroidViewModel import androidx.lifecycle.viewModelScope import com.presto.mediamanager.PrestoApp import com.presto.mediamanager.data.db.MediaItem import com.presto.mediamanager.media.CropRect import com.presto.mediamanager.media.ExportDestination import com.presto.mediamanager.media.ExportRequest import com.presto.mediamanager.media.TrimRange import com.presto.mediamanager.data.settings.ShareResolution import com.presto.mediamanager.work.BadgeManager import kotlinx.coroutines.flow.MutableStateFlow import kotlinx.coroutines.flow.StateFlow import kotlinx.coroutines.flow.asStateFlow import kotlinx.coroutines.flow.update import kotlinx.coroutines.launch</ID>
+    <ID>MatchingDeclarationName:AppNav.kt$Routes</ID>
+    <ID>NoUnusedImports:ExportSheet.kt$com.presto.mediamanager.ui.editor.ExportSheet.kt</ID>
+    <ID>NoUnusedImports:LabelDialog.kt$com.presto.mediamanager.ui.components.LabelDialog.kt</ID>
+    <ID>NoUnusedImports:ReviewFeedScreen.kt$com.presto.mediamanager.ui.feed.ReviewFeedScreen.kt</ID>
+    <ID>SwallowedException:ScanWorker.kt$ScanWorker$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:ScanWorker.kt$ScanWorker$t: Throwable</ID>
+    <ID>UnusedParameter:TrimBar.kt$alignment: Alignment</ID>
+    <ID>Wrapping:CropOverlay.kt$(</ID>
+    <ID>Wrapping:ReviewFeedScreen.kt$;</ID>
+  </CurrentIssues>
+</SmellBaseline>

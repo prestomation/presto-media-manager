@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.roborazzi)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -52,6 +54,21 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
+        managedDevices {
+            localDevices {
+                create("atdApi34") {
+                    device = "Pixel 5"
+                    apiLevel = 34
+                    // Automated Test Device: headless, no GUI, optimized for instrumentation.
+                    systemImageSource = "aosp-atd"
+                }
+            }
+        }
+    }
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        baseline = file("lint-baseline.xml")
     }
     packaging {
         resources {
@@ -106,6 +123,7 @@ dependencies {
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
     testImplementation(libs.roborazzi.junit.rule)
+    testImplementation(libs.roborazzi.accessibility.check)
     testImplementation(libs.androidx.room.ktx)
 
     // ---- Instrumented E2E tests (emulator) ----
@@ -114,8 +132,21 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(libs.truth)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }
 
 roborazzi {
     outputDir.set(file("$rootDir/screenshots"))
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
+    parallel = true
+}
+
+dependencies {
+    detektPlugins(libs.detekt.formatting)
 }
