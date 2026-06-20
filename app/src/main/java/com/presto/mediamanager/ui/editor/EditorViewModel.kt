@@ -5,11 +5,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.presto.mediamanager.PrestoApp
 import com.presto.mediamanager.data.db.MediaItem
+import com.presto.mediamanager.data.settings.ShareResolution
 import com.presto.mediamanager.media.CropRect
 import com.presto.mediamanager.media.ExportDestination
 import com.presto.mediamanager.media.ExportRequest
 import com.presto.mediamanager.media.TrimRange
-import com.presto.mediamanager.data.settings.ShareResolution
+import com.presto.mediamanager.util.VideoThumbnails
 import com.presto.mediamanager.work.BadgeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,8 @@ data class EditorUiState(
     val durationMs: Long = 0,
     val trim: TrimRange = TrimRange(0, 0),
     val crop: CropRect = CropRect(),
+    val positionMs: Long = 0,
+    val thumbnails: List<androidx.compose.ui.graphics.ImageBitmap> = emptyList(),
     val removeAudio: Boolean = false,
     val shareResolution: ShareResolution = ShareResolution.P720,
     val exporting: Boolean = false,
@@ -50,9 +53,12 @@ class EditorViewModel(app: Application) : AndroidViewModel(app) {
                     shareResolution = settings.defaultShareResolution,
                 )
             }
+            val frames = VideoThumbnails.extract(getApplication(), found.uri, found.durationMs)
+            _state.update { it.copy(thumbnails = frames) }
         }
     }
 
+    fun setPosition(ms: Long) = _state.update { it.copy(positionMs = ms) }
     fun setTrim(trim: TrimRange) = _state.update { it.copy(trim = trim) }
     fun setCrop(crop: CropRect) = _state.update { it.copy(crop = crop) }
     fun setRemoveAudio(value: Boolean) = _state.update { it.copy(removeAudio = value) }
