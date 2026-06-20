@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.roborazzi)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
 }
 
 android {
@@ -52,6 +54,11 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
+    }
+    lint {
+        abortOnError = true
+        warningsAsErrors = false
+        baseline = file("lint-baseline.xml")
     }
     packaging {
         resources {
@@ -118,4 +125,15 @@ dependencies {
 
 roborazzi {
     outputDir.set(file("$rootDir/screenshots"))
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
+    parallel = true
+}
+
+dependencies {
+    detektPlugins(libs.detekt.formatting)
 }
