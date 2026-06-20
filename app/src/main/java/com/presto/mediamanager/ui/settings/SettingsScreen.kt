@@ -35,6 +35,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.presto.mediamanager.BuildConfig
 import com.presto.mediamanager.data.settings.AppSettings
 import com.presto.mediamanager.data.settings.ShareResolution
 
@@ -44,8 +45,10 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = viewModel(),
 ) {
     val state by viewModel.state.collectAsState()
+    val buildInfo = "v${BuildConfig.VERSION_NAME} · ${BuildConfig.GIT_SHA} · ${BuildConfig.BUILD_TIME} UTC"
     SettingsContent(
         state = state,
+        buildInfo = buildInfo,
         onBack = onBack,
         onFolderPicked = viewModel::onFolderPicked,
         onAutoDeleteEnabled = viewModel::setAutoDeleteEnabled,
@@ -65,6 +68,7 @@ fun SettingsContent(
     onAutoDeleteDays: (Int) -> Unit,
     onDefaultRemoveAudio: (Boolean) -> Unit,
     onDefaultShareResolution: (ShareResolution) -> Unit,
+    buildInfo: String = "",
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -147,6 +151,15 @@ fun SettingsContent(
                     )
                 }
             }
+
+            HorizontalDivider(Modifier.padding(vertical = 20.dp))
+
+            SectionTitle("About")
+            Text(
+                buildInfo.ifBlank { "—" },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
