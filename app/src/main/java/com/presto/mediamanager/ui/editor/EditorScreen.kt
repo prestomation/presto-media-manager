@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.Button
@@ -17,6 +19,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -87,6 +90,7 @@ fun EditorContent(
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var zoomInspect by remember { mutableStateOf(false) }
+    var aspectLocked by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
@@ -99,6 +103,13 @@ fun EditorContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { aspectLocked = !aspectLocked }, enabled = !zoomInspect) {
+                        Icon(
+                            if (aspectLocked) Icons.Filled.Lock else Icons.Filled.LockOpen,
+                            contentDescription = if (aspectLocked) "Unlock aspect ratio" else "Lock aspect ratio",
+                            tint = if (aspectLocked) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                        )
+                    }
                     IconButton(onClick = { zoomInspect = !zoomInspect }) {
                         Icon(
                             if (zoomInspect) Icons.Filled.ZoomOut else Icons.Filled.ZoomIn,
@@ -148,7 +159,11 @@ fun EditorContent(
             } else {
                 videoSlot(item, zoomInspect)
                 if (!zoomInspect) {
-                    CropOverlay(crop = state.crop, onCropChange = onCropChange)
+                    CropOverlay(
+                        crop = state.crop,
+                        onCropChange = onCropChange,
+                        aspectLocked = aspectLocked,
+                    )
                 }
                 if (state.exporting) {
                     Box(
