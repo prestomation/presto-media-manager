@@ -1,11 +1,17 @@
 package com.presto.mediamanager.screenshot
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
@@ -14,6 +20,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.presto.mediamanager.PlaceholderVideo
@@ -23,6 +30,7 @@ import com.presto.mediamanager.media.CropRect
 import com.presto.mediamanager.media.TrimRange
 import com.presto.mediamanager.sampleItem
 import com.presto.mediamanager.sampleItems
+import com.presto.mediamanager.ui.components.FeedScrubber
 import com.presto.mediamanager.ui.editor.EditorContent
 import com.presto.mediamanager.ui.editor.EditorUiState
 import com.presto.mediamanager.ui.feed.ReviewFeedContent
@@ -94,6 +102,24 @@ class MoreScreenshotTests {
                     onArchive = { _, _ -> }, onReview = {},
                     videoSlot = { _, _ -> PlaceholderVideo() },
                 )
+            }
+        }
+        composeRule.onRoot().captureRoboImage()
+    }
+
+    @Test
+    fun feedScrubber() {
+        composeRule.setContent {
+            PrestoTheme {
+                Box(Modifier.fillMaxWidth().background(Color.Black).padding(16.dp)) {
+                    FeedScrubber(
+                        positionMs = 4_200,
+                        durationMs = 12_000,
+                        onScrubStart = {},
+                        onSeek = {},
+                        onScrubEnd = {},
+                    )
+                }
             }
         }
         composeRule.onRoot().captureRoboImage()

@@ -46,8 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.presto.mediamanager.data.db.MediaItem
+import com.presto.mediamanager.ui.components.FeedPlayer
 import com.presto.mediamanager.ui.components.LabelDialog
-import com.presto.mediamanager.ui.components.LoopingVideoPlayer
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -88,7 +88,7 @@ fun ReviewFeedScreen(
         onArchive = viewModel::archive,
         onReview = onReview,
         videoSlot = { item, active ->
-            LoopingVideoPlayer(uri = item.uri, modifier = Modifier.fillMaxSize(), playing = active)
+            FeedPlayer(uri = item.uri, modifier = Modifier.fillMaxSize(), playing = active)
         },
     )
 }
