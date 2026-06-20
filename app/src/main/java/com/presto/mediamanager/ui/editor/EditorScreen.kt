@@ -70,6 +70,7 @@ fun EditorScreen(
                 trimEndMs = state.trim.endMs,
                 zoomEnabled = zoomEnabled,
                 modifier = Modifier.fillMaxSize(),
+                onPosition = viewModel::setPosition,
             )
         },
     )
@@ -133,6 +134,8 @@ fun EditorContent(
                 TrimBar(
                     durationMs = state.durationMs,
                     trim = state.trim,
+                    positionMs = state.positionMs,
+                    thumbnails = state.thumbnails,
                     onTrimChange = onTrimChange,
                     modifier = Modifier.padding(top = 8.dp),
                 )

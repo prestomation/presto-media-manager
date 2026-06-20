@@ -38,6 +38,7 @@ fun EditorPreviewPlayer(
     trimEndMs: Long,
     zoomEnabled: Boolean,
     modifier: Modifier = Modifier,
+    onPosition: (Long) -> Unit = {},
 ) {
     val context = LocalContext.current
     val player = remember(uri) {
@@ -59,6 +60,7 @@ fun EditorPreviewPlayer(
             if (end > start && (pos >= end - 40 || pos < start - 40)) {
                 player.seekTo(start)
             }
+            onPosition(player.currentPosition)
             delay(100)
         }
     }
