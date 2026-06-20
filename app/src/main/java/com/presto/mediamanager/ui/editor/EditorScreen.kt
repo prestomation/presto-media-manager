@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
@@ -153,7 +154,9 @@ fun EditorContent(
             Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .background(Color.Black),
+                .background(Color.Black)
+                // Keep edge swipes over the crop area from triggering system back.
+                .systemGestureExclusion(),
             contentAlignment = Alignment.Center,
         ) {
             val item = state.item

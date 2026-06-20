@@ -15,6 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -104,19 +109,34 @@ fun TrimBar(
                 .background(Color.White),
         )
 
-        Handle(startFrac, maxWidth) { deltaPx ->
-            val deltaMs = (deltaPx / trackWidthPx * durationMs).toLong()
-            onTrimChange(trim.copy(startMs = (trim.startMs + deltaMs).coerceIn(0, trim.endMs - MIN_CLIP_MS)))
+        // Snapshot the trim at gesture start; apply the cumulative drag so the
+        // handle tracks the finger regardless of recomposition timing.
+        var startTrim by remember { mutableStateOf(trim) }
+        val latestTrim by rememberUpdatedState(trim)
+        val onChange by rememberUpdatedState(onTrimChange)
+
+        Handle(startFrac, maxWidth, { startTrim = latestTrim }) { totalPx ->
+            val deltaMs = (totalPx / trackWidthPx * durationMs).toLong()
+            val s = startTrim
+            onChange(s.copy(startMs = (s.startMs + deltaMs).coerceIn(0, s.endMs - MIN_CLIP_MS)))
         }
-        Handle(endFrac, maxWidth) { deltaPx ->
-            val deltaMs = (deltaPx / trackWidthPx * durationMs).toLong()
-            onTrimChange(trim.copy(endMs = (trim.endMs + deltaMs).coerceIn(trim.startMs + MIN_CLIP_MS, durationMs)))
+        Handle(endFrac, maxWidth, { startTrim = latestTrim }) { totalPx ->
+            val deltaMs = (totalPx / trackWidthPx * durationMs).toLong()
+            val s = startTrim
+            onChange(s.copy(endMs = (s.endMs + deltaMs).coerceIn(s.startMs + MIN_CLIP_MS, durationMs)))
         }
     }
 }
 
 @Composable
-private fun Handle(offsetFrac: Float, trackWidth: Dp, onDrag: (Float) -> Unit) {
+private fun Handle(
+    offsetFrac: Float,
+    trackWidth: Dp,
+    onDragStart: () -> Unit,
+    onCumulativeDrag: (Float) -> Unit,
+) {
+    val startCb by rememberUpdatedState(onDragStart)
+    val dragCb by rememberUpdatedState(onCumulativeDrag)
     Box(
         Modifier
             .offset(x = trackWidth * offsetFrac - 8.dp)
@@ -124,7 +144,11 @@ private fun Handle(offsetFrac: Float, trackWidth: Dp, onDrag: (Float) -> Unit) {
             .fillMaxHeight()
             .background(Color.White, RoundedCornerShape(4.dp))
             .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, delta -> onDrag(delta) }
+                var acc = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { acc = 0f; startCb() },
+                    onHorizontalDrag = { _, delta -> acc += delta; dragCb(acc) },
+                )
             },
         contentAlignment = Alignment.Center,
     ) {
