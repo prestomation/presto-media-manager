@@ -14,7 +14,12 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-class SettingsRepository(private val context: Context) {
+/** Read-only view of settings, so consumers (e.g. the repository) can be faked in tests. */
+interface SettingsProvider {
+    suspend fun current(): AppSettings
+}
+
+class SettingsRepository(private val context: Context) : SettingsProvider {
 
     private object Keys {
         val INPUT = stringPreferencesKey("input_folder_uri")
@@ -38,7 +43,7 @@ class SettingsRepository(private val context: Context) {
         )
     }
 
-    suspend fun current(): AppSettings = settings.first()
+    override suspend fun current(): AppSettings = settings.first()
 
     suspend fun setInputFolder(uri: String) = edit { it[Keys.INPUT] = uri }
     suspend fun setArchiveFolder(uri: String) = edit { it[Keys.ARCHIVE] = uri }

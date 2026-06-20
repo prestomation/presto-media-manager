@@ -17,13 +17,13 @@ enum class FolderKind { INPUT, ARCHIVE, SHARE }
 class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as PrestoApp).container
     private val settings = container.settingsRepository
-    private val saf = container.safManager
+    private val storage = container.storageGateway
 
     val state: StateFlow<AppSettings> = settings.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
 
     fun onFolderPicked(kind: FolderKind, uri: Uri) {
-        saf.persistTreePermission(uri)
+        storage.persistFolderPermission(uri.toString())
         viewModelScope.launch {
             when (kind) {
                 FolderKind.INPUT -> settings.setInputFolder(uri.toString())

@@ -12,7 +12,7 @@ import androidx.media3.transformer.Effects
 import androidx.media3.transformer.ExportException
 import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.Transformer
-import com.presto.mediamanager.data.saf.SafManager
+import com.presto.mediamanager.data.storage.StorageGateway
 import com.presto.mediamanager.util.Filenames
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,24 +23,36 @@ import kotlin.coroutines.resumeWithException
 
 /** Outcome of an export: the URIs written into the archive/share folders. */
 data class ExportOutcome(
-    val archiveUri: Uri,
-    val shareUri: Uri?,
+    val archiveUri: String,
+    val shareUri: String?,
 )
 
+/** Renders an edited clip to the archive (full-res) and optionally the share (downscaled) folder. */
+interface VideoExporter {
+    suspend fun export(
+        sourceUri: String,
+        captureMs: Long,
+        archiveFolderUri: String,
+        shareFolderUri: String,
+        request: ExportRequest,
+    ): ExportOutcome
+}
+
 /**
- * Renders edited clips with Media3 Transformer. Always writes a full-resolution
- * edited file to the archive folder; for SHARE it also writes a downscaled copy
- * to the share folder. Both files share the same "{date}_{label}.mp4" stem.
+ * Media3 Transformer implementation. Always writes a full-resolution edited file
+ * to the archive folder; for SHARE it also writes a downscaled copy to the share
+ * folder. Both files share the same "{date}_{label}.mp4" stem.
  */
 class ExportManager(
     private val context: Context,
-    private val saf: SafManager,
-) {
-    suspend fun export(
-        sourceUri: Uri,
+    private val storage: StorageGateway,
+) : VideoExporter {
+
+    override suspend fun export(
+        sourceUri: String,
         captureMs: Long,
-        archiveTreeUri: Uri,
-        shareTreeUri: Uri,
+        archiveFolderUri: String,
+        shareFolderUri: String,
         request: ExportRequest,
     ): ExportOutcome {
         val fileName = Filenames.dated(request.label, captureMs)
@@ -48,12 +60,12 @@ class ExportManager(
         // 1. Full-resolution edited copy -> archive.
         val fullRes = File.createTempFile("export-full", ".mp4", context.cacheDir)
         runTransform(sourceUri, request, presentationHeight = null, outFile = fullRes)
-        val archiveUri = saf.writeFileInto(fullRes, archiveTreeUri, fileName)
+        val archiveUri = storage.writeFileInto(fullRes, archiveFolderUri, fileName)
             ?: error("Failed to write archive file")
         fullRes.delete()
 
         // 2. For SHARE, a downscaled copy -> share folder.
-        var shareUri: Uri? = null
+        var shareUri: String? = null
         if (request.destination == ExportDestination.SHARE) {
             val shareFile = File.createTempFile("export-share", ".mp4", context.cacheDir)
             runTransform(
@@ -62,7 +74,7 @@ class ExportManager(
                 presentationHeight = request.shareResolution.height,
                 outFile = shareFile,
             )
-            shareUri = saf.writeFileInto(shareFile, shareTreeUri, fileName)
+            shareUri = storage.writeFileInto(shareFile, shareFolderUri, fileName)
                 ?: error("Failed to write share file")
             shareFile.delete()
         }
@@ -71,13 +83,13 @@ class ExportManager(
     }
 
     private suspend fun runTransform(
-        sourceUri: Uri,
+        sourceUri: String,
         request: ExportRequest,
         presentationHeight: Int?,
         outFile: File,
     ) = withContext(Dispatchers.Main) {
         val mediaItem = MediaItem.Builder()
-            .setUri(sourceUri)
+            .setUri(Uri.parse(sourceUri))
             .setClippingConfiguration(
                 MediaItem.ClippingConfiguration.Builder()
                     .setStartPositionMs(request.trim.startMs)
