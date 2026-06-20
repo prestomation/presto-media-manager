@@ -30,6 +30,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -185,8 +187,13 @@ private fun FolderRow(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            OutlinedButton(onClick = { launcher.launch(null) }) {
-                Text(if (uri == null) "Choose" else "Change")
+            val action = if (uri == null) "Choose" else "Change"
+            OutlinedButton(
+                onClick = { launcher.launch(null) },
+                // Unique speakable label per row so screen readers can tell them apart.
+                modifier = Modifier.semantics { contentDescription = "$action $title folder" },
+            ) {
+                Text(action)
             }
         }
     }

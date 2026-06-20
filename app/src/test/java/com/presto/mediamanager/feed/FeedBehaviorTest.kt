@@ -2,7 +2,6 @@ package com.presto.mediamanager.feed
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.google.common.truth.Truth.assertThat
@@ -40,7 +39,7 @@ class FeedBehaviorTest {
                 )
             }
         }
-        composeRule.onNodeWithContentDescription("Delete").performClick()
+        composeRule.onNodeWithText("Delete").performClick()
         assertThat(deleted).isNotNull()
         assertThat(deleted!!.uri).isEqualTo("content://fake/1")
     }
@@ -60,7 +59,7 @@ class FeedBehaviorTest {
                 )
             }
         }
-        composeRule.onNodeWithContentDescription("Archive").performClick()
+        composeRule.onNodeWithText("Archive").performClick()
         composeRule.onNodeWithText("Archive clip").assertIsDisplayed()
     }
 
