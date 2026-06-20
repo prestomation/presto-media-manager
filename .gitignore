@@ -1,0 +1,15 @@
+*.iml
+.gradle/
+/local.properties
+.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+app/build/
+build/
+# Roborazzi diff/actual artifacts (only golden *.png are committed)
+**/*_compare.png
+**/*_actual.png
