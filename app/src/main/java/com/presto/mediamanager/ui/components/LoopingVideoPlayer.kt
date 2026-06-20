@@ -3,6 +3,7 @@ package com.presto.mediamanager.ui.components
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +29,12 @@ fun LoopingVideoPlayer(
             playWhenReady = playing
             prepare()
         }
+    }
+
+    // Only the on-screen video should play; pause the rest so a big feed stays smooth.
+    LaunchedEffect(player, playing) {
+        player.playWhenReady = playing
+        if (!playing) player.seekTo(0)
     }
 
     DisposableEffect(uri) {

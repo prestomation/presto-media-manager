@@ -9,6 +9,7 @@ import com.presto.mediamanager.work.BadgeManager
 import com.presto.mediamanager.work.WorkScheduler
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -23,6 +24,10 @@ class ReviewFeedViewModel(app: Application) : AndroidViewModel(app) {
 
     val queue: StateFlow<List<MediaItem>> = repo.observeReviewQueue()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val configured: StateFlow<Boolean> = container.settingsRepository.settings
+        .map { it.isConfigured }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
     init {
         refresh()

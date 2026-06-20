@@ -45,7 +45,7 @@ class MoreScreenshotTests {
                     items = sampleItems(2),
                     onOpenSettings = {}, onDelete = {}, onLater = {},
                     onArchive = { _, _ -> }, onReview = {},
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }
@@ -64,9 +64,25 @@ class MoreScreenshotTests {
                         items = sampleItems(2),
                         onOpenSettings = {}, onDelete = {}, onLater = {},
                         onArchive = { _, _ -> }, onReview = {},
-                        videoSlot = { PlaceholderVideo() },
+                        videoSlot = { _, _ -> PlaceholderVideo() },
                     )
                 }
+            }
+        }
+        composeRule.onRoot().captureRoboImage()
+    }
+
+    @Test
+    fun feed_unconfigured() {
+        composeRule.setContent {
+            PrestoTheme {
+                ReviewFeedContent(
+                    items = emptyList(),
+                    configured = false,
+                    onOpenSettings = {}, onDelete = {}, onLater = {},
+                    onArchive = { _, _ -> }, onReview = {},
+                    videoSlot = { _, _ -> PlaceholderVideo() },
+                )
             }
         }
         composeRule.onRoot().captureRoboImage()
@@ -86,7 +102,7 @@ class MoreScreenshotTests {
                     ),
                     onBack = {}, onTrimChange = {}, onCropChange = {},
                     onRemoveAudioChange = {}, onShareResolutionChange = {}, onExport = { _, _ -> },
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }
@@ -106,7 +122,7 @@ class MoreScreenshotTests {
                     ),
                     onBack = {}, onTrimChange = {}, onCropChange = {},
                     onRemoveAudioChange = {}, onShareResolutionChange = {}, onExport = { _, _ -> },
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }

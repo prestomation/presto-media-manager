@@ -46,7 +46,7 @@ class AccessibilityTests {
                     items = sampleItems(2),
                     onOpenSettings = {}, onDelete = {}, onLater = {},
                     onArchive = { _, _ -> }, onReview = {},
-                    videoSlot = { PlaceholderVideo() },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
                 )
             }
         }

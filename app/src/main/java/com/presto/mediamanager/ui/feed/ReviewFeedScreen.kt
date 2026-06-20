@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,14 +51,18 @@ fun ReviewFeedScreen(
     viewModel: ReviewFeedViewModel = viewModel(),
 ) {
     val items by viewModel.queue.collectAsState()
+    val configured by viewModel.configured.collectAsState()
     ReviewFeedContent(
         items = items,
+        configured = configured,
         onOpenSettings = onOpenSettings,
         onDelete = viewModel::delete,
         onLater = viewModel::later,
         onArchive = viewModel::archive,
         onReview = onReview,
-        videoSlot = { item -> LoopingVideoPlayer(uri = item.uri, modifier = Modifier.fillMaxSize()) },
+        videoSlot = { item, active ->
+            LoopingVideoPlayer(uri = item.uri, modifier = Modifier.fillMaxSize(), playing = active)
+        },
     )
 }
 
@@ -70,11 +75,12 @@ fun ReviewFeedContent(
     onLater: (MediaItem) -> Unit,
     onArchive: (MediaItem, String) -> Unit,
     onReview: (MediaItem) -> Unit,
-    videoSlot: @Composable (MediaItem) -> Unit,
+    videoSlot: @Composable (MediaItem, Boolean) -> Unit,
+    configured: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     if (items.isEmpty()) {
-        EmptyFeed(onOpenSettings, modifier)
+        EmptyFeed(onOpenSettings, configured, modifier)
         return
     }
 
@@ -91,7 +97,7 @@ fun ReviewFeedContent(
         VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
             val item = items[page]
             Box(Modifier.fillMaxSize()) {
-                videoSlot(item)
+                videoSlot(item, page == pagerState.currentPage)
 
                 FeedTopBar(
                     position = page + 1,
@@ -199,17 +205,38 @@ private fun FeedAction(
 }
 
 @Composable
-private fun EmptyFeed(onOpenSettings: () -> Unit, modifier: Modifier = Modifier) {
+private fun EmptyFeed(
+    onOpenSettings: () -> Unit,
+    configured: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("All caught up", style = MaterialTheme.typography.headlineSmall)
-            Text(
-                "No videos waiting for review.",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-            IconButton(onClick = onOpenSettings, modifier = Modifier.padding(top = 12.dp)) {
-                Icon(Icons.Filled.Settings, contentDescription = "Settings")
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 32.dp),
+        ) {
+            if (configured) {
+                Text("All caught up", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "No videos waiting for review.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                IconButton(onClick = onOpenSettings, modifier = Modifier.padding(top = 12.dp)) {
+                    Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                }
+            } else {
+                Text("Set up your folders", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "Choose the input, archive, and share folders to start reviewing.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Button(onClick = onOpenSettings, modifier = Modifier.padding(top = 16.dp)) {
+                    Icon(Icons.Filled.Settings, contentDescription = null)
+                    Text("Open settings", modifier = Modifier.padding(start = 8.dp))
+                }
             }
         }
     }
