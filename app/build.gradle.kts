@@ -1,3 +1,8 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,6 +12,22 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
 }
+
+/** Short git commit hash of the build, or "nogit" if unavailable. */
+fun gitSha(): String = try {
+    val process = ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+        .directory(rootDir)
+        .redirectErrorStream(true)
+        .start()
+    process.inputStream.bufferedReader().readText().trim().ifEmpty { "nogit" }
+} catch (e: Exception) {
+    "nogit"
+}
+
+val buildTime: String =
+    SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US)
+        .apply { timeZone = TimeZone.getTimeZone("UTC") }
+        .format(Date())
 
 android {
     namespace = "com.presto.mediamanager"
@@ -18,6 +39,9 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "0.1.0"
+
+        buildConfigField("String", "GIT_SHA", "\"${gitSha()}\"")
+        buildConfigField("String", "BUILD_TIME", "\"$buildTime\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables { useSupportLibrary = true }

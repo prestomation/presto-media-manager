@@ -110,6 +110,7 @@ class ScreenshotTests {
                         autoDeleteDays = 14,
                         defaultShareResolution = ShareResolution.P720,
                     ),
+                    buildInfo = "v0.1.0 · abc1234 · 2026-06-20 06:00 UTC",
                     onBack = {},
                     onFolderPicked = { _, _ -> },
                     onAutoDeleteEnabled = {},
