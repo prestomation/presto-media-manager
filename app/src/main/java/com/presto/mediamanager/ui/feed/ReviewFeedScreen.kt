@@ -151,9 +151,10 @@ fun ReviewFeedContent(
             }
         }
 
+        // Anchored to the top so it never covers the scrub bar / action bar below.
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 72.dp),
         )
     }
 

@@ -46,6 +46,7 @@ fun TrimBar(
     positionMs: Long,
     thumbnails: List<ImageBitmap>,
     onTrimChange: (TrimRange) -> Unit,
+    onScrub: (Long?) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (durationMs <= 0) return
@@ -114,16 +115,31 @@ fun TrimBar(
         var startTrim by remember { mutableStateOf(trim) }
         val latestTrim by rememberUpdatedState(trim)
         val onChange by rememberUpdatedState(onTrimChange)
+        val onScrubCb by rememberUpdatedState(onScrub)
 
-        Handle(startFrac, maxWidth, { startTrim = latestTrim }) { totalPx ->
+        // Each handle reports the frame it's parked on (onScrub) so the preview can
+        // hold that exact frame live; null on release resumes normal playback.
+        Handle(
+            startFrac, maxWidth,
+            onDragStart = { startTrim = latestTrim; onScrubCb(latestTrim.startMs) },
+            onDragEnd = { onScrubCb(null) },
+        ) { totalPx ->
             val deltaMs = (totalPx / trackWidthPx * durationMs).toLong()
             val s = startTrim
-            onChange(s.copy(startMs = (s.startMs + deltaMs).coerceIn(0, s.endMs - MIN_CLIP_MS)))
+            val newStart = (s.startMs + deltaMs).coerceIn(0, s.endMs - MIN_CLIP_MS)
+            onChange(s.copy(startMs = newStart))
+            onScrubCb(newStart)
         }
-        Handle(endFrac, maxWidth, { startTrim = latestTrim }) { totalPx ->
+        Handle(
+            endFrac, maxWidth,
+            onDragStart = { startTrim = latestTrim; onScrubCb(latestTrim.endMs) },
+            onDragEnd = { onScrubCb(null) },
+        ) { totalPx ->
             val deltaMs = (totalPx / trackWidthPx * durationMs).toLong()
             val s = startTrim
-            onChange(s.copy(endMs = (s.endMs + deltaMs).coerceIn(s.startMs + MIN_CLIP_MS, durationMs)))
+            val newEnd = (s.endMs + deltaMs).coerceIn(s.startMs + MIN_CLIP_MS, durationMs)
+            onChange(s.copy(endMs = newEnd))
+            onScrubCb(newEnd)
         }
     }
 }
@@ -133,9 +149,11 @@ private fun Handle(
     offsetFrac: Float,
     trackWidth: Dp,
     onDragStart: () -> Unit,
+    onDragEnd: () -> Unit,
     onCumulativeDrag: (Float) -> Unit,
 ) {
     val startCb by rememberUpdatedState(onDragStart)
+    val endCb by rememberUpdatedState(onDragEnd)
     val dragCb by rememberUpdatedState(onCumulativeDrag)
     Box(
         Modifier
@@ -147,6 +165,8 @@ private fun Handle(
                 var acc = 0f
                 detectHorizontalDragGestures(
                     onDragStart = { acc = 0f; startCb() },
+                    onDragEnd = { endCb() },
+                    onDragCancel = { endCb() },
                     onHorizontalDrag = { _, delta -> acc += delta; dragCb(acc) },
                 )
             },

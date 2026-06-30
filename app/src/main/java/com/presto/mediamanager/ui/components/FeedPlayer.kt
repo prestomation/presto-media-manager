@@ -22,6 +22,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
@@ -85,9 +86,20 @@ fun FeedPlayer(
             FeedScrubber(
                 positionMs = positionMs,
                 durationMs = durationMs,
-                onScrubStart = { scrubbing = true },
+                // Pause and switch to keyframe seeking so frames render instantly
+                // under the finger; restore exact seeking and resume on release.
+                onScrubStart = {
+                    scrubbing = true
+                    player.playWhenReady = false
+                    player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                },
                 onSeek = { ms -> positionMs = ms; player.seekTo(ms) },
-                onScrubEnd = { scrubbing = false },
+                onScrubEnd = {
+                    player.setSeekParameters(SeekParameters.DEFAULT)
+                    player.seekTo(positionMs)
+                    player.playWhenReady = playing
+                    scrubbing = false
+                },
                 // Sit above the action bar.
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
