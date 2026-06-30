@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.VerticalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +37,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.presto.mediamanager.data.db.MediaItem
 import com.presto.mediamanager.ui.components.FeedPlayer
 import com.presto.mediamanager.ui.components.LabelDialog
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -62,6 +65,7 @@ fun ReviewFeedScreen(
     val items by viewModel.queue.collectAsState()
     val configured by viewModel.configured.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val pagerState = rememberPagerState(pageCount = { items.size })
 
     LaunchedEffect(Unit) {
         viewModel.undoEvents.collect { item ->
@@ -72,6 +76,13 @@ fun ReviewFeedScreen(
             )
             if (result == SnackbarResult.ActionPerformed) {
                 viewModel.undoDelete(item)
+                // The restored item slides back into its original spot in the queue,
+                // which may be above where the user has since scrolled. Wait for it to
+                // reappear, then bring the feed back to it instead of stranding the
+                // user on whatever video they were on.
+                val index = snapshotFlow { items.indexOfFirst { it.uri == item.uri } }
+                    .first { it >= 0 }
+                pagerState.animateScrollToPage(index)
             } else {
                 viewModel.commitDelete(item)
             }
@@ -82,6 +93,7 @@ fun ReviewFeedScreen(
         items = items,
         configured = configured,
         snackbarHostState = snackbarHostState,
+        pagerState = pagerState,
         onOpenSettings = onOpenSettings,
         onDelete = viewModel::delete,
         onLater = viewModel::later,
@@ -105,6 +117,7 @@ fun ReviewFeedContent(
     videoSlot: @Composable (MediaItem, Boolean) -> Unit,
     configured: Boolean = true,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    pagerState: PagerState = rememberPagerState(pageCount = { items.size }),
     modifier: Modifier = Modifier,
 ) {
     if (items.isEmpty()) {
@@ -112,7 +125,6 @@ fun ReviewFeedContent(
         return
     }
 
-    val pagerState = rememberPagerState(pageCount = { items.size })
     val scope = rememberCoroutineScope()
     var labelTarget by remember { mutableStateOf<MediaItem?>(null) }
 
