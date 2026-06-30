@@ -219,6 +219,7 @@ class MoreScreenshotTests {
                     state = AppSettings(),
                     onBack = {}, onFolderPicked = { _, _ -> }, onAutoDeleteEnabled = {},
                     onAutoDeleteDays = {}, onDefaultRemoveAudio = {}, onDefaultShareResolution = {},
+                    onExactScrubbing = {},
                 )
             }
         }
@@ -241,6 +242,7 @@ class MoreScreenshotTests {
                         ),
                         onBack = {}, onFolderPicked = { _, _ -> }, onAutoDeleteEnabled = {},
                         onAutoDeleteDays = {}, onDefaultRemoveAudio = {}, onDefaultShareResolution = {},
+                        onExactScrubbing = {},
                     )
                 }
             }

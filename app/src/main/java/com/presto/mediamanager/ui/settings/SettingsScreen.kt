@@ -55,6 +55,7 @@ fun SettingsScreen(
         onAutoDeleteDays = viewModel::setAutoDeleteDays,
         onDefaultRemoveAudio = viewModel::setDefaultRemoveAudio,
         onDefaultShareResolution = viewModel::setDefaultShareResolution,
+        onExactScrubbing = viewModel::setExactScrubbing,
     )
 }
 
@@ -68,6 +69,7 @@ fun SettingsContent(
     onAutoDeleteDays: (Int) -> Unit,
     onDefaultRemoveAudio: (Boolean) -> Unit,
     onDefaultShareResolution: (ShareResolution) -> Unit,
+    onExactScrubbing: (Boolean) -> Unit,
     buildInfo: String = "",
     modifier: Modifier = Modifier,
 ) {
@@ -150,6 +152,26 @@ fun SettingsContent(
                         label = { Text(res.label) },
                     )
                 }
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 20.dp))
+
+            SectionTitle("Playback")
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text("Frame-exact scrubbing", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        "More precise, but the preview updates less smoothly as you drag. " +
+                            "Off snaps to keyframes for a real-time preview.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = state.exactScrubbing, onCheckedChange = onExactScrubbing)
             }
 
             HorizontalDivider(Modifier.padding(vertical = 20.dp))

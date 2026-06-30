@@ -117,6 +117,7 @@ class ScreenshotTests {
                     onAutoDeleteDays = {},
                     onDefaultRemoveAudio = {},
                     onDefaultShareResolution = {},
+                    onExactScrubbing = {},
                 )
             }
         }

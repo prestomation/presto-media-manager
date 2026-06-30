@@ -24,9 +24,12 @@ data class EditorUiState(
     val trim: TrimRange = TrimRange(0, 0),
     val crop: CropRect = CropRect(),
     val positionMs: Long = 0,
+    /** Non-null while a trim handle is being dragged: the frame to hold for preview. */
+    val scrubMs: Long? = null,
     val thumbnails: List<androidx.compose.ui.graphics.ImageBitmap> = emptyList(),
     val removeAudio: Boolean = false,
     val shareResolution: ShareResolution = ShareResolution.P720,
+    val exactScrubbing: Boolean = false,
     val exporting: Boolean = false,
     val finished: Boolean = false,
     val error: String? = null,
@@ -51,6 +54,7 @@ class EditorViewModel(app: Application) : AndroidViewModel(app) {
                     trim = TrimRange(0, found.durationMs),
                     removeAudio = settings.defaultRemoveAudio,
                     shareResolution = settings.defaultShareResolution,
+                    exactScrubbing = settings.exactScrubbing,
                 )
             }
             val frames = VideoThumbnails.extract(getApplication(), found.uri, found.durationMs)
@@ -59,6 +63,7 @@ class EditorViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setPosition(ms: Long) = _state.update { it.copy(positionMs = ms) }
+    fun setScrub(ms: Long?) = _state.update { it.copy(scrubMs = ms) }
     fun setTrim(trim: TrimRange) = _state.update { it.copy(trim = trim) }
     fun setCrop(crop: CropRect) = _state.update { it.copy(crop = crop) }
     fun setRemoveAudio(value: Boolean) = _state.update { it.copy(removeAudio = value) }

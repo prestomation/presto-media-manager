@@ -61,6 +61,7 @@ fun ReviewFeedScreen(
 ) {
     val items by viewModel.queue.collectAsState()
     val configured by viewModel.configured.collectAsState()
+    val exactScrubbing by viewModel.exactScrubbing.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(Unit) {
@@ -88,7 +89,12 @@ fun ReviewFeedScreen(
         onArchive = viewModel::archive,
         onReview = onReview,
         videoSlot = { item, active ->
-            FeedPlayer(uri = item.uri, modifier = Modifier.fillMaxSize(), playing = active)
+            FeedPlayer(
+                uri = item.uri,
+                modifier = Modifier.fillMaxSize(),
+                playing = active,
+                exactSeek = exactScrubbing,
+            )
         },
     )
 }
@@ -151,9 +157,10 @@ fun ReviewFeedContent(
             }
         }
 
+        // Anchored to the top so it never covers the scrub bar / action bar below.
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 96.dp),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 72.dp),
         )
     }
 

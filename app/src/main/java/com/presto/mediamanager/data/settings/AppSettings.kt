@@ -25,6 +25,9 @@ data class AppSettings(
     val autoDeleteDays: Int = 14,
     val defaultRemoveAudio: Boolean = false,
     val defaultShareResolution: ShareResolution = ShareResolution.P720,
+    /** When true, scrubbing seeks frame-exact (precise but laggy); otherwise it
+     *  snaps to keyframes for a responsive, real-time preview. */
+    val exactScrubbing: Boolean = false,
 ) {
     val isConfigured: Boolean
         get() = inputFolderUri != null && archiveFolderUri != null && shareFolderUri != null

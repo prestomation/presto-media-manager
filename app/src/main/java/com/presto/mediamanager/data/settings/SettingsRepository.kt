@@ -29,6 +29,7 @@ class SettingsRepository(private val context: Context) : SettingsProvider {
         val AUTO_DELETE_DAYS = intPreferencesKey("auto_delete_days")
         val DEFAULT_REMOVE_AUDIO = booleanPreferencesKey("default_remove_audio")
         val DEFAULT_SHARE_HEIGHT = intPreferencesKey("default_share_height")
+        val EXACT_SCRUBBING = booleanPreferencesKey("exact_scrubbing")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -40,6 +41,7 @@ class SettingsRepository(private val context: Context) : SettingsProvider {
             autoDeleteDays = p[Keys.AUTO_DELETE_DAYS] ?: 14,
             defaultRemoveAudio = p[Keys.DEFAULT_REMOVE_AUDIO] ?: false,
             defaultShareResolution = ShareResolution.fromHeight(p[Keys.DEFAULT_SHARE_HEIGHT] ?: 720),
+            exactScrubbing = p[Keys.EXACT_SCRUBBING] ?: false,
         )
     }
 
@@ -53,6 +55,7 @@ class SettingsRepository(private val context: Context) : SettingsProvider {
     suspend fun setDefaultRemoveAudio(value: Boolean) = edit { it[Keys.DEFAULT_REMOVE_AUDIO] = value }
     suspend fun setDefaultShareResolution(res: ShareResolution) =
         edit { it[Keys.DEFAULT_SHARE_HEIGHT] = res.height }
+    suspend fun setExactScrubbing(value: Boolean) = edit { it[Keys.EXACT_SCRUBBING] = value }
 
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         context.dataStore.edit(block)

@@ -21,6 +21,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.SeekParameters
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import kotlinx.coroutines.delay
@@ -38,6 +39,8 @@ fun EditorPreviewPlayer(
     trimEndMs: Long,
     zoomEnabled: Boolean,
     modifier: Modifier = Modifier,
+    scrubMs: Long? = null,
+    exactSeek: Boolean = false,
     onPosition: (Long) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -51,13 +54,34 @@ fun EditorPreviewPlayer(
 
     val start by rememberUpdatedState(trimStartMs)
     val end by rememberUpdatedState(trimEndMs)
+    val scrub by rememberUpdatedState(scrubMs)
+
+    // While a trim handle is dragged, pause and hold its exact frame using fast
+    // keyframe seeks so the preview tracks the finger in real time; on release,
+    // restore exact seeking and resume looping the trim window.
+    LaunchedEffect(player, scrubMs, exactSeek) {
+        val target = scrub
+        if (target != null) {
+            player.playWhenReady = false
+            player.setSeekParameters(
+                if (exactSeek) SeekParameters.DEFAULT else SeekParameters.CLOSEST_SYNC,
+            )
+            player.seekTo(target)
+        } else {
+            player.setSeekParameters(SeekParameters.DEFAULT)
+            player.seekTo(start)
+            player.playWhenReady = true
+        }
+    }
 
     // Seek to the trim start whenever it changes, then keep playback inside [start, end].
-    LaunchedEffect(player, trimStartMs) { player.seekTo(start) }
+    LaunchedEffect(player, trimStartMs) { if (scrub == null) player.seekTo(start) }
     LaunchedEffect(player) {
         while (true) {
             val pos = player.currentPosition
-            if (end > start && (pos >= end - 40 || pos < start - 40)) {
+            val outsideWindow = end > start && (pos >= end - 40 || pos < start - 40)
+            // Don't bounce back to start while a scrub is holding a frame.
+            if (scrub == null && outsideWindow) {
                 player.seekTo(start)
             }
             onPosition(player.currentPosition)

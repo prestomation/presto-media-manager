@@ -60,6 +60,7 @@ fun EditorScreen(
         state = state,
         onBack = onBack,
         onTrimChange = viewModel::setTrim,
+        onScrubChange = viewModel::setScrub,
         onCropChange = viewModel::setCrop,
         onRemoveAudioChange = viewModel::setRemoveAudio,
         onShareResolutionChange = viewModel::setShareResolution,
@@ -70,6 +71,8 @@ fun EditorScreen(
                 trimStartMs = state.trim.startMs,
                 trimEndMs = state.trim.endMs,
                 zoomEnabled = zoomEnabled,
+                scrubMs = state.scrubMs,
+                exactSeek = state.exactScrubbing,
                 modifier = Modifier.fillMaxSize(),
                 onPosition = viewModel::setPosition,
             )
@@ -83,6 +86,7 @@ fun EditorContent(
     state: EditorUiState,
     onBack: () -> Unit,
     onTrimChange: (TrimRange) -> Unit,
+    onScrubChange: (Long?) -> Unit = {},
     onCropChange: (CropRect) -> Unit,
     onRemoveAudioChange: (Boolean) -> Unit,
     onShareResolutionChange: (com.presto.mediamanager.data.settings.ShareResolution) -> Unit,
@@ -138,6 +142,7 @@ fun EditorContent(
                     positionMs = state.positionMs,
                     thumbnails = state.thumbnails,
                     onTrimChange = onTrimChange,
+                    onScrub = onScrubChange,
                     modifier = Modifier.padding(top = 8.dp),
                 )
                 Button(

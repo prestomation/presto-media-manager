@@ -38,6 +38,10 @@ class ReviewFeedViewModel(app: Application) : AndroidViewModel(app) {
         .map { it.isConfigured }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
+    val exactScrubbing: StateFlow<Boolean> = container.settingsRepository.settings
+        .map { it.exactScrubbing }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
     init {
         refresh()
     }
