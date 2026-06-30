@@ -29,6 +29,7 @@ data class EditorUiState(
     val thumbnails: List<androidx.compose.ui.graphics.ImageBitmap> = emptyList(),
     val removeAudio: Boolean = false,
     val shareResolution: ShareResolution = ShareResolution.P720,
+    val exactScrubbing: Boolean = false,
     val exporting: Boolean = false,
     val finished: Boolean = false,
     val error: String? = null,
@@ -53,6 +54,7 @@ class EditorViewModel(app: Application) : AndroidViewModel(app) {
                     trim = TrimRange(0, found.durationMs),
                     removeAudio = settings.defaultRemoveAudio,
                     shareResolution = settings.defaultShareResolution,
+                    exactScrubbing = settings.exactScrubbing,
                 )
             }
             val frames = VideoThumbnails.extract(getApplication(), found.uri, found.durationMs)

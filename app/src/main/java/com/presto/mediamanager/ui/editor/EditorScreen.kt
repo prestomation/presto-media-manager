@@ -72,6 +72,7 @@ fun EditorScreen(
                 trimEndMs = state.trim.endMs,
                 zoomEnabled = zoomEnabled,
                 scrubMs = state.scrubMs,
+                exactSeek = state.exactScrubbing,
                 modifier = Modifier.fillMaxSize(),
                 onPosition = viewModel::setPosition,
             )

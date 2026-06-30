@@ -40,6 +40,7 @@ fun EditorPreviewPlayer(
     zoomEnabled: Boolean,
     modifier: Modifier = Modifier,
     scrubMs: Long? = null,
+    exactSeek: Boolean = false,
     onPosition: (Long) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -58,11 +59,13 @@ fun EditorPreviewPlayer(
     // While a trim handle is dragged, pause and hold its exact frame using fast
     // keyframe seeks so the preview tracks the finger in real time; on release,
     // restore exact seeking and resume looping the trim window.
-    LaunchedEffect(player, scrubMs) {
+    LaunchedEffect(player, scrubMs, exactSeek) {
         val target = scrub
         if (target != null) {
             player.playWhenReady = false
-            player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+            player.setSeekParameters(
+                if (exactSeek) SeekParameters.DEFAULT else SeekParameters.CLOSEST_SYNC,
+            )
             player.seekTo(target)
         } else {
             player.setSeekParameters(SeekParameters.DEFAULT)

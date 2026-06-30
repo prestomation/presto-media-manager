@@ -61,6 +61,7 @@ class AccessibilityTests {
                     state = AppSettings(autoDeleteEnabled = true, autoDeleteDays = 14),
                     onBack = {}, onFolderPicked = { _, _ -> }, onAutoDeleteEnabled = {},
                     onAutoDeleteDays = {}, onDefaultRemoveAudio = {}, onDefaultShareResolution = {},
+                    onExactScrubbing = {},
                 )
             }
         }

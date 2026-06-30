@@ -38,6 +38,7 @@ fun FeedPlayer(
     uri: String,
     playing: Boolean,
     modifier: Modifier = Modifier,
+    exactSeek: Boolean = false,
 ) {
     val context = LocalContext.current
     val player = remember(uri) {
@@ -86,12 +87,15 @@ fun FeedPlayer(
             FeedScrubber(
                 positionMs = positionMs,
                 durationMs = durationMs,
-                // Pause and switch to keyframe seeking so frames render instantly
-                // under the finger; restore exact seeking and resume on release.
+                // Pause while scrubbing; keyframe seeking renders frames instantly
+                // under the finger, while exact seeking (opt-in) trades that
+                // smoothness for frame precision. Restore exact + resume on release.
                 onScrubStart = {
                     scrubbing = true
                     player.playWhenReady = false
-                    player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                    player.setSeekParameters(
+                        if (exactSeek) SeekParameters.DEFAULT else SeekParameters.CLOSEST_SYNC,
+                    )
                 },
                 onSeek = { ms -> positionMs = ms; player.seekTo(ms) },
                 onScrubEnd = {

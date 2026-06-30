@@ -37,6 +37,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setAutoDeleteDays(days: Int) = launch { settings.setAutoDeleteDays(days) }
     fun setDefaultRemoveAudio(value: Boolean) = launch { settings.setDefaultRemoveAudio(value) }
     fun setDefaultShareResolution(res: ShareResolution) = launch { settings.setDefaultShareResolution(res) }
+    fun setExactScrubbing(value: Boolean) = launch { settings.setExactScrubbing(value) }
 
     private fun launch(block: suspend () -> Unit) = viewModelScope.launch { block() }
 }
