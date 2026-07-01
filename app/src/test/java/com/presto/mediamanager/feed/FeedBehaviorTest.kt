@@ -7,6 +7,7 @@ import androidx.compose.ui.test.performClick
 import com.google.common.truth.Truth.assertThat
 import com.presto.mediamanager.PlaceholderVideo
 import com.presto.mediamanager.data.db.MediaItem
+import com.presto.mediamanager.data.settings.PlaybackSpeed
 import com.presto.mediamanager.sampleItems
 import com.presto.mediamanager.ui.feed.ReviewFeedContent
 import com.presto.mediamanager.ui.theme.PrestoTheme
@@ -42,6 +43,31 @@ class FeedBehaviorTest {
         composeRule.onNodeWithText("Delete").performClick()
         assertThat(deleted).isNotNull()
         assertThat(deleted!!.uri).isEqualTo("content://fake/1")
+    }
+
+    @Test
+    fun speedPill_tap_cyclesSpeedWithoutTriggeringReset() {
+        var cycled = false
+        var reset = false
+        composeRule.setContent {
+            PrestoTheme {
+                ReviewFeedContent(
+                    items = sampleItems(1),
+                    onOpenSettings = {},
+                    onDelete = {},
+                    onLater = {},
+                    onArchive = { _, _ -> },
+                    onReview = {},
+                    currentSpeed = PlaybackSpeed.X1_5,
+                    onCycleSpeed = { cycled = true },
+                    onResetSpeed = { reset = true },
+                    videoSlot = { _, _ -> PlaceholderVideo() },
+                )
+            }
+        }
+        composeRule.onNodeWithText("1.5x").performClick()
+        assertThat(cycled).isTrue()
+        assertThat(reset).isFalse()
     }
 
     @Test

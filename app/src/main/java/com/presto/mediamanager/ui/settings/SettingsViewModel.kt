@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.presto.mediamanager.PrestoApp
 import com.presto.mediamanager.data.settings.AppSettings
+import com.presto.mediamanager.data.settings.PlaybackSpeed
 import com.presto.mediamanager.data.settings.ShareResolution
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +38,7 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     fun setAutoDeleteDays(days: Int) = launch { settings.setAutoDeleteDays(days) }
     fun setDefaultRemoveAudio(value: Boolean) = launch { settings.setDefaultRemoveAudio(value) }
     fun setDefaultShareResolution(res: ShareResolution) = launch { settings.setDefaultShareResolution(res) }
+    fun setDefaultPlaybackSpeed(speed: PlaybackSpeed) = launch { settings.setDefaultPlaybackSpeed(speed) }
 
     private fun launch(block: suspend () -> Unit) = viewModelScope.launch { block() }
 }

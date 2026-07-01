@@ -2,6 +2,7 @@ package com.presto.mediamanager.ui.feed
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,19 +43,29 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.presto.mediamanager.data.db.MediaItem
+import com.presto.mediamanager.data.settings.PlaybackSpeed
 import com.presto.mediamanager.ui.components.FeedPlayer
 import com.presto.mediamanager.ui.components.LabelDialog
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+/** Long-press threshold for resetting the speed pill to the configured default. */
+private const val SPEED_RESET_HOLD_MS = 1000L
 
 @Composable
 fun ReviewFeedScreen(
@@ -64,6 +75,7 @@ fun ReviewFeedScreen(
 ) {
     val items by viewModel.queue.collectAsState()
     val configured by viewModel.configured.collectAsState()
+    val currentSpeed by viewModel.currentSpeed.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val pagerState = rememberPagerState(pageCount = { items.size })
 
@@ -99,8 +111,16 @@ fun ReviewFeedScreen(
         onLater = viewModel::later,
         onArchive = viewModel::archive,
         onReview = onReview,
+        currentSpeed = currentSpeed,
+        onCycleSpeed = viewModel::cycleSpeed,
+        onResetSpeed = viewModel::resetSpeed,
         videoSlot = { item, active ->
-            FeedPlayer(uri = item.uri, modifier = Modifier.fillMaxSize(), playing = active)
+            FeedPlayer(
+                uri = item.uri,
+                modifier = Modifier.fillMaxSize(),
+                playing = active,
+                speed = currentSpeed.multiplier,
+            )
         },
     )
 }
@@ -116,6 +136,9 @@ fun ReviewFeedContent(
     onReview: (MediaItem) -> Unit,
     videoSlot: @Composable (MediaItem, Boolean) -> Unit,
     configured: Boolean = true,
+    currentSpeed: PlaybackSpeed = PlaybackSpeed.X1_5,
+    onCycleSpeed: () -> Unit = {},
+    onResetSpeed: () -> Unit = {},
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     pagerState: PagerState = rememberPagerState(pageCount = { items.size }),
     modifier: Modifier = Modifier,
@@ -150,6 +173,9 @@ fun ReviewFeedContent(
                     total = items.size,
                     item = item,
                     onOpenSettings = onOpenSettings,
+                    speed = currentSpeed,
+                    onCycleSpeed = onCycleSpeed,
+                    onResetSpeed = onResetSpeed,
                     modifier = Modifier.align(Alignment.TopCenter),
                 )
 
@@ -188,6 +214,9 @@ private fun FeedTopBar(
     total: Int,
     item: MediaItem,
     onOpenSettings: () -> Unit,
+    speed: PlaybackSpeed,
+    onCycleSpeed: () -> Unit,
+    onResetSpeed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -210,9 +239,66 @@ private fun FeedTopBar(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
+        SpeedPill(speed = speed, onTap = onCycleSpeed, onLongPress = onResetSpeed)
         IconButton(onClick = onOpenSettings) {
             Icon(Icons.Filled.Settings, contentDescription = "Settings", tint = Color.White)
         }
+    }
+}
+
+/**
+ * Tap cycles through the playback speeds; holding for [SPEED_RESET_HOLD_MS]
+ * snaps back to the configured default. Deliberately out of the primary
+ * thumb path — it's tucked next to Settings since it's rarely touched.
+ */
+@Composable
+private fun SpeedPill(
+    speed: PlaybackSpeed,
+    onTap: () -> Unit,
+    onLongPress: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .padding(end = 8.dp)
+            .clip(RoundedCornerShape(50))
+            .background(Color.White.copy(alpha = 0.2f))
+            .pointerInput(onTap, onLongPress) {
+                while (true) {
+                    awaitPointerEventScope { awaitFirstDown() }
+                    val releasedInTime = withTimeoutOrNull(SPEED_RESET_HOLD_MS) {
+                        awaitPointerEventScope { waitForRelease() }
+                    } != null
+                    if (releasedInTime) {
+                        onTap()
+                    } else {
+                        onLongPress()
+                        awaitPointerEventScope { waitForRelease() }
+                    }
+                }
+            }
+            .semantics(mergeDescendants = true) {
+                contentDescription = "Playback speed ${speed.label}"
+                onClick(label = "next speed") { onTap(); true }
+                onLongClick(label = "reset to default speed") { onLongPress(); true }
+            }
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            speed.label,
+            color = Color.White,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelLarge,
+        )
+    }
+}
+
+/** Suspends until every active pointer has been released. */
+private suspend fun AwaitPointerEventScope.waitForRelease() {
+    while (true) {
+        val event = awaitPointerEvent()
+        if (event.changes.all { !it.pressed }) return
     }
 }
 
