@@ -5,6 +5,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -29,6 +30,7 @@ class SettingsRepository(private val context: Context) : SettingsProvider {
         val AUTO_DELETE_DAYS = intPreferencesKey("auto_delete_days")
         val DEFAULT_REMOVE_AUDIO = booleanPreferencesKey("default_remove_audio")
         val DEFAULT_SHARE_HEIGHT = intPreferencesKey("default_share_height")
+        val DEFAULT_PLAYBACK_SPEED = floatPreferencesKey("default_playback_speed")
     }
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
@@ -40,6 +42,7 @@ class SettingsRepository(private val context: Context) : SettingsProvider {
             autoDeleteDays = p[Keys.AUTO_DELETE_DAYS] ?: 14,
             defaultRemoveAudio = p[Keys.DEFAULT_REMOVE_AUDIO] ?: false,
             defaultShareResolution = ShareResolution.fromHeight(p[Keys.DEFAULT_SHARE_HEIGHT] ?: 720),
+            defaultPlaybackSpeed = PlaybackSpeed.fromMultiplier(p[Keys.DEFAULT_PLAYBACK_SPEED] ?: 1.5f),
         )
     }
 
@@ -53,6 +56,8 @@ class SettingsRepository(private val context: Context) : SettingsProvider {
     suspend fun setDefaultRemoveAudio(value: Boolean) = edit { it[Keys.DEFAULT_REMOVE_AUDIO] = value }
     suspend fun setDefaultShareResolution(res: ShareResolution) =
         edit { it[Keys.DEFAULT_SHARE_HEIGHT] = res.height }
+    suspend fun setDefaultPlaybackSpeed(speed: PlaybackSpeed) =
+        edit { it[Keys.DEFAULT_PLAYBACK_SPEED] = speed.multiplier }
 
     private suspend fun edit(block: (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {
         context.dataStore.edit(block)

@@ -37,6 +37,7 @@ fun FeedPlayer(
     uri: String,
     playing: Boolean,
     modifier: Modifier = Modifier,
+    speed: Float = 1f,
 ) {
     val context = LocalContext.current
     val player = remember(uri) {
@@ -47,6 +48,8 @@ fun FeedPlayer(
             prepare()
         }
     }
+
+    LaunchedEffect(player, speed) { player.setPlaybackSpeed(speed) }
 
     var positionMs by remember(uri) { mutableLongStateOf(0L) }
     var durationMs by remember(uri) { mutableLongStateOf(0L) }

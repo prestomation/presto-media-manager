@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.presto.mediamanager.BuildConfig
 import com.presto.mediamanager.data.settings.AppSettings
+import com.presto.mediamanager.data.settings.PlaybackSpeed
 import com.presto.mediamanager.data.settings.ShareResolution
 
 @Composable
@@ -55,6 +56,7 @@ fun SettingsScreen(
         onAutoDeleteDays = viewModel::setAutoDeleteDays,
         onDefaultRemoveAudio = viewModel::setDefaultRemoveAudio,
         onDefaultShareResolution = viewModel::setDefaultShareResolution,
+        onDefaultPlaybackSpeed = viewModel::setDefaultPlaybackSpeed,
     )
 }
 
@@ -68,6 +70,7 @@ fun SettingsContent(
     onAutoDeleteDays: (Int) -> Unit,
     onDefaultRemoveAudio: (Boolean) -> Unit,
     onDefaultShareResolution: (ShareResolution) -> Unit,
+    onDefaultPlaybackSpeed: (PlaybackSpeed) -> Unit = {},
     buildInfo: String = "",
     modifier: Modifier = Modifier,
 ) {
@@ -148,6 +151,24 @@ fun SettingsContent(
                         selected = state.defaultShareResolution == res,
                         onClick = { onDefaultShareResolution(res) },
                         label = { Text(res.label) },
+                    )
+                }
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 20.dp))
+
+            SectionTitle("Playback")
+            Text(
+                "Default playback speed",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 8.dp),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                PlaybackSpeed.entries.forEach { speed ->
+                    FilterChip(
+                        selected = state.defaultPlaybackSpeed == speed,
+                        onClick = { onDefaultPlaybackSpeed(speed) },
+                        label = { Text(speed.label) },
                     )
                 }
             }

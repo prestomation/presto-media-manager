@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.presto.mediamanager.PrestoApp
 import com.presto.mediamanager.data.db.MediaItem
+import com.presto.mediamanager.data.settings.PlaybackSpeed
 import com.presto.mediamanager.work.BadgeManager
 import com.presto.mediamanager.work.WorkScheduler
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -38,8 +39,31 @@ class ReviewFeedViewModel(app: Application) : AndroidViewModel(app) {
         .map { it.isConfigured }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
+    private val defaultSpeed: StateFlow<PlaybackSpeed> = container.settingsRepository.settings
+        .map { it.defaultPlaybackSpeed }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlaybackSpeed.X1_5)
+
+    /** Session-local override of the default speed; null while un-touched. */
+    private val speedOverride = MutableStateFlow<PlaybackSpeed?>(null)
+
+    val currentSpeed: StateFlow<PlaybackSpeed> = combine(speedOverride, defaultSpeed) { override, default ->
+        override ?: default
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PlaybackSpeed.X1_5)
+
     init {
         refresh()
+    }
+
+    /** Tap: step to the next speed in the fixed cycle. */
+    fun cycleSpeed() {
+        val entries = PlaybackSpeed.entries
+        val next = entries[(entries.indexOf(currentSpeed.value) + 1) % entries.size]
+        speedOverride.value = next
+    }
+
+    /** Long-press: drop any session override and fall back to the configured default. */
+    fun resetSpeed() {
+        speedOverride.value = null
     }
 
     fun refresh() {
